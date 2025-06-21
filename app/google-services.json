@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1096716348860",
+    "project_id": "mailytcuidav2",
+    "storage_bucket": "mailytcuidav2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1096716348860:android:c2efd3308b1ba707458fb9",
+        "android_client_info": {
+          "package_name": "com.example.mailyt_cuida_v22"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrc_LL3nvqnepXNXoK6xrcdsJk_gHbTO0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

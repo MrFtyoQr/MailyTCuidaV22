@@ -21,7 +21,7 @@ fun NavigationWrapper(navHostController: NavHostController, auth: FirebaseAuth){
         }
 
         composable("login"){
-            LoginScreen(auth)
+            LoginScreen(auth, navHostController)
         }
 
         composable("signup"){

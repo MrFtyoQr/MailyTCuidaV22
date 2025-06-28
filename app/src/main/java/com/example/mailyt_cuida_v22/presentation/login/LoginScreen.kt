@@ -3,6 +3,7 @@ package com.example.mailyt_cuida_v22.presentation.login
 import android.net.wifi.hotspot2.pps.HomeSp
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -27,39 +29,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mailyt_cuida_v22.ui.theme.Black
 import com.example.mailyt_cuida_v22.ui.theme.White
 import com.google.firebase.auth.FirebaseAuth
 import com.example.mailyt_cuida_v22.R
+import com.example.mailyt_cuida_v22.ui.theme.Gray
 import com.example.mailyt_cuida_v22.ui.theme.Red
 import com.example.mailyt_cuida_v22.ui.theme.SelectedField
 import com.example.mailyt_cuida_v22.ui.theme.UnselectedField
 import java.nio.file.WatchEvent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.navigation.NavHostController
 
 
 @Composable
-fun LoginScreen(auth: FirebaseAuth) {
+fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .background(Black)
+        .background(Brush.verticalGradient(listOf(Gray, Black), startY = 0f, endY = 600f))
         .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Row(){
-            Icon(
-                painter = painterResource(id = R.drawable.ic_back_24),
-                contentDescription = "",
-                tint = White,
-                modifier = Modifier
-                    .padding(vertical = 30.dp)
-                    .size(30.dp)
-            )
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
             Spacer(modifier = Modifier.weight(1f))
         }
 
@@ -98,7 +100,7 @@ fun LoginScreen(auth: FirebaseAuth) {
                 }
             }
         }) {
-            Text(text = "Registrarse")
+            Text(text = "Iniciar Sesión")
         }
 
 
@@ -106,4 +108,3 @@ fun LoginScreen(auth: FirebaseAuth) {
         Spacer(modifier = Modifier.weight(6f))
     }
 }
-

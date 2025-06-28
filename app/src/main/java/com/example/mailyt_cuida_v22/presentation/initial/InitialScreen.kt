@@ -38,7 +38,7 @@ import com.example.mailyt_cuida_v22.ui.theme.ShapeButton
 
 @Preview
 @Composable
-fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignup: () -> Unit = {}) {
+fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignup: () -> Unit = {}, navigateToHome: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +55,7 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignup: () -> Unit
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.weight(1f))
-        Button(onClick = { navigateToSignup() }, modifier = Modifier
+        Button(onClick = { navigateToLogin() }, modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
             .padding(horizontal = 32.dp), colors = ButtonDefaults.buttonColors(containerColor = Orange)) {
@@ -78,7 +78,7 @@ fun InitialScreen(navigateToLogin: () -> Unit = {}, navigateToSignup: () -> Unit
             color = Color.White,
             modifier = Modifier
                 .padding(24.dp)
-                .clickable { navigateToLogin() },
+                .clickable { navigateToSignup() },
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.weight(1f))

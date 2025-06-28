@@ -51,6 +51,22 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // Función helper para manejar el retroceso
+    fun handleBackNavigation() {
+        Log.d("Navigation", "Intentando retroceder desde LoginScreen")
+        if (navController.previousBackStackEntry != null) {
+            Log.d("Navigation", "Hay pantalla anterior, usando popBackStack")
+            navController.popBackStack()
+            Log.d("Navigation", "popBackStack ejecutado - debería estar en InitialScreen")
+        } else {
+            Log.d("Navigation", "No hay pantalla anterior, navegando a initial")
+            // Si no hay pantalla anterior, navegar a initial
+            navController.navigate("initial") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     Column(modifier = Modifier
         .fillMaxSize()
         .background(Brush.verticalGradient(listOf(Gray, Black), startY = 0f, endY = 600f))
@@ -58,9 +74,17 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        Spacer(modifier = Modifier.weight(0.6f))
+
         Row(){
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            IconButton(
+                onClick = { handleBackNavigation() }
+            ) {
+                Icon(
+                    Icons.Default.ArrowBack, 
+                    contentDescription = "Back",
+                    tint = White
+                )
             }
             Spacer(modifier = Modifier.weight(1f))
         }

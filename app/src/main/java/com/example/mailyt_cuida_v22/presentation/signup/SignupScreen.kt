@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -35,11 +36,30 @@ import com.example.mailyt_cuida_v22.ui.theme.SelectedField
 import com.example.mailyt_cuida_v22.ui.theme.UnselectedField
 import com.example.mailyt_cuida_v22.ui.theme.White
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.navigation.NavHostController
 
 @Composable
-fun SignupScreen(auth: FirebaseAuth, navigateToHome: () -> Unit = {}) {
+fun SignupScreen(auth: FirebaseAuth, navController: NavHostController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // Función helper para manejar el retroceso
+    fun handleBackNavigation() {
+        Log.d("Navigation", "Intentando retroceder desde SignupScreen")
+        if (navController.previousBackStackEntry != null) {
+            Log.d("Navigation", "Hay pantalla anterior, usando popBackStack")
+            navController.popBackStack()
+            Log.d("Navigation", "popBackStack ejecutado - debería estar en InitialScreen")
+        } else {
+            Log.d("Navigation", "No hay pantalla anterior, navegando a initial")
+            // Si no hay pantalla anterior, navegar a initial
+            navController.navigate("initial") {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -48,19 +68,20 @@ fun SignupScreen(auth: FirebaseAuth, navigateToHome: () -> Unit = {}) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        Spacer(modifier = Modifier.weight(0.6f))
+
         Row(){
-            Icon(
-                painter = painterResource(id = R.drawable.ic_back_24),
-                contentDescription = "",
-                tint = White,
-                modifier = Modifier
-                    .padding(vertical = 30.dp)
-                    .size(30.dp)
-                    .clickable { navigateToHome() } // Navegar a la pantalla de inicio
-            )
+            IconButton(
+                onClick = { handleBackNavigation() }
+            ) {
+                Icon(
+                    Icons.Default.ArrowBack, 
+                    contentDescription = "Back",
+                    tint = White
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
         }
-
 
         Spacer(modifier = Modifier.weight(1f))
         Text("Email", color = White, fontWeight = FontWeight.Bold, fontSize = 40.sp)
@@ -99,9 +120,6 @@ fun SignupScreen(auth: FirebaseAuth, navigateToHome: () -> Unit = {}) {
             Text(text = "Registrarse")
         }
 
-
-
         Spacer(modifier = Modifier.weight(6f))
     }
-
 }

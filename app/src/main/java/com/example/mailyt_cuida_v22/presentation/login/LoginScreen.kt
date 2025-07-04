@@ -2,7 +2,9 @@ package com.example.mailyt_cuida_v22.presentation.login
 
 import android.net.wifi.hotspot2.pps.HomeSp
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,45 +48,40 @@ import com.example.mailyt_cuida_v22.ui.theme.UnselectedField
 import java.nio.file.WatchEvent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.ButtonDefaults
 import androidx.navigation.NavHostController
-
+import com.example.mailyt_cuida_v22.ui.theme.Orange
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 
 @Composable
 fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
-    // Función helper para manejar el retroceso
-    fun handleBackNavigation() {
-        Log.d("Navigation", "Intentando retroceder desde LoginScreen")
-        if (navController.previousBackStackEntry != null) {
-            Log.d("Navigation", "Hay pantalla anterior, usando popBackStack")
-            navController.popBackStack()
-            Log.d("Navigation", "popBackStack ejecutado - debería estar en InitialScreen")
-        } else {
-            Log.d("Navigation", "No hay pantalla anterior, navegando a initial")
-            // Si no hay pantalla anterior, navegar a initial
-            navController.navigate("initial") {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
+    val context = LocalContext.current
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .background(Brush.verticalGradient(listOf(Gray, Black), startY = 0f, endY = 600f))
+        .background(Brush.verticalGradient(listOf(Gray, White), startY = 0f, endY = 600f))
         .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(modifier = Modifier.weight(0.6f))
+        Spacer(modifier = Modifier.weight(1f))
 
         Row(){
             IconButton(
-                onClick = { handleBackNavigation() }
+                onClick = { navController.popBackStack() }
             ) {
                 Icon(
-                    Icons.Default.ArrowBack, 
+                    Icons.Default.ArrowBack,
                     contentDescription = "Back",
                     tint = White
                 )
@@ -90,40 +90,102 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
         }
 
 
-        Spacer(modifier = Modifier.weight(1f))
-        Text("Email", color = White, fontWeight = FontWeight.Bold, fontSize = 40.sp)
+        Spacer(modifier = Modifier.weight(2f))
+        //De esta manera importo la imagen que tengo en la carpeeta de drawable, la centro y le dare altura mas abajo con
+        // las medidas f qque exactamente no se que es pero funciona en todo el column asi que me gusta
+        Image(painter = painterResource(id = R.drawable.maily), contentDescription = "")
+        Text(
+            text = "Maily", fontSize = 35.sp, fontWeight = FontWeight.Normal
+        )
+        Text(
+            text = "T-Cuida", fontSize = 18.sp, fontWeight = FontWeight.Normal
+        )
+
+        //Empezare a comentar jsjsjs, aqui estoy dejando un espacio de 5f para que el simbolo se vea de arribita, mas parecido a
+        // la app original y va aqui por que esta abajo del texto de maily t cuida para que tenga una mejor apariencia
+        Spacer(modifier = Modifier.weight(5f))
+        //Los textfield son los que permiten que introduzcamos textos, o datos no importa pero son
+        //textos, y mas abajo en el boton esta la logica de verdad que jalara los value o valores de los textfield
+        //como vez en este caso son el email y el password, que son los que se necesitan para iniciar sesion
         TextField(
             value = email,
             onValueChange = { email = it },
-            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Correo", fontSize = 14.sp, color = Color.Gray) },
+            modifier = Modifier
+                .border(1.dp, Color.LightGray, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 10.dp)
+                .background(Color.White),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = UnselectedField,
-                focusedContainerColor = SelectedField
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                disabledContainerColor = Color.White,
+                errorContainerColor = Color.White,
+                focusedTextColor = Color.Gray,
+                unfocusedTextColor = Color.Gray
             )
         )
         Spacer(Modifier.height(48.dp))
-        Text("Password", color = White, fontWeight = FontWeight.Bold, fontSize = 40.sp )
         TextField(
             value = password,
             onValueChange = { password = it },
-            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Contraseña", fontSize = 14.sp, color = Color.Gray) },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier
+                .border(1.dp, Color.LightGray, shape = RoundedCornerShape(10.dp))
+                .padding(horizontal = 10.dp)
+                .background(Color.White),
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = UnselectedField,
-                focusedContainerColor = SelectedField
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                disabledContainerColor = Color.White,
+                errorContainerColor = Color.White,
+                focusedTextColor = Color.Gray,
+                unfocusedTextColor = Color.Gray
             )
         )
         Spacer(modifier = Modifier.height(48.dp))
         Button(onClick = {
-            auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // Navegar
-                    Log.i("Joseph", "Login successful")
-                } else {
-                    // Error
-                    Log.i("Joseph", "Login failed")
+            when {
+                email.isBlank() || password.isBlank() -> {
+                    Log.w("Login", "Ningún campo debe estar vacío")
+                    Toast.makeText(context, "Ningún campo debe estar vacío", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    Log.d("Login", "Intentando login con: $email")
+                    auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Log.i("User", "Login successful")
+                            Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+                            navController.navigate("home") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        } else {
+                            val exception = task.exception
+                            Log.e("User", "Login failed: ${exception?.message}")
+                            val errorMsg = when {
+                                exception?.message?.contains("There is no user record") == true -> {
+                                    "Esta cuenta no existe"
+                                }
+                                exception?.message?.contains("The password is invalid") == true -> {
+                                    "El correo y/o la contraseña están mal"
+                                }
+                                exception?.message?.contains("The email address is badly formatted") == true -> {
+                                    "El correo no es válido"
+                                }
+                                else -> {
+                                    "Error desconocido: ${exception?.localizedMessage ?: "Intenta de nuevo"}"
+                                }
+                            }
+                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             }
-        }) {
+        },
+            modifier = Modifier.padding(horizontal = 100.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Orange),
+            shape = RoundedCornerShape(8.dp)
+            ) {
             Text(text = "Iniciar Sesión")
         }
 
@@ -132,3 +194,5 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
         Spacer(modifier = Modifier.weight(6f))
     }
 }
+
+

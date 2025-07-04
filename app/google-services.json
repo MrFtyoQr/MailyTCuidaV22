@@ -12,7 +12,12 @@
           "package_name": "com.example.mailyt_cuida_v22"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1096716348860-btj3rb38d85fg1d31jfi0ui5tm8jnog7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBrc_LL3nvqnepXNXoK6xrcdsJk_gHbTO0"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1096716348860-btj3rb38d85fg1d31jfi0ui5tm8jnog7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

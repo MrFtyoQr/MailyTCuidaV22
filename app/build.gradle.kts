@@ -47,7 +47,13 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
 
+    //bd de firebase
 
+
+    // Google Sign-In dependencies
+    implementation(libs.play.services.auth)
+
+    implementation("androidx.compose.material:material-icons-extended:<versión>")
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)

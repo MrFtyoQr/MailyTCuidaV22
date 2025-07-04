@@ -19,6 +19,8 @@ val ShapeButton = Color(0xFF3e3e3e)
 val SelectedField = Color(0xFF7c7c7c)
 val UnselectedField = Color(0xFF4a4a4a)
 
+val LightBlue = Color(0xFF2596be)
+
 
 // Paleta de colores de MAilyT Cuida V2.2
 val Orange = Color(0xFFFFA500) // Naranja para el botón de inicio de sesión

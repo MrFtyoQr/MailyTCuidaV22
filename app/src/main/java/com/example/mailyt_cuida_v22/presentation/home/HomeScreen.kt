@@ -32,6 +32,7 @@ import com.example.mailyt_cuida_v22.ui.theme.Gray
 import com.example.mailyt_cuida_v22.ui.theme.LightBlue
 import com.example.mailyt_cuida_v22.ui.theme.White
 import com.google.firebase.auth.FirebaseAuth
+import android.widget.Toast
 
 
 @Composable
@@ -76,6 +77,7 @@ fun PantallaInicio(
 @Composable
 fun BarraSuperior(navController: NavController, nombreUsuario: String) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -135,7 +137,14 @@ fun BarraSuperior(navController: NavController, nombreUsuario: String) {
                     )
                     DropdownMenuItem(
                         text = { Text("Cerrar sesión") },
-                        onClick = { /* Lógica de logout */ menuExpanded = false }
+                        onClick = {
+                            menuExpanded = false
+                            FirebaseAuth.getInstance().signOut()
+                            Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+                            navController.navigate("initial") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
                     )
                 }
             }
@@ -210,12 +219,12 @@ fun Especialidades() {
     val context = LocalContext.current
     // Números de WhatsApp configurables para cada especialidad
     val numeros = mapOf(
-        "Nutrición" to "5212345678901",
-        "Psicología" to "5212345678902",
-        "Odontología" to "5212345678903",
-        "Fisioterapia" to "5212345678904",
-        "Dermacosmética" to "5212345678905",
-        "Especialidades" to "5212345678906"
+        "Nutrición" to "527442780069",
+        "Psicología" to "527442780069",
+        "Odontología" to "527442780069",
+        "Fisioterapia" to "527442780069",
+        "Dermacosmética" to "527442780069",
+        "Especialidades" to "527442780069"
     )
     Column(
         modifier = Modifier
@@ -251,10 +260,11 @@ fun Especialidades() {
 
 @Composable
 fun BotonEspecialidad(texto: String, numeroWhatsApp: String, context: android.content.Context, modifier: Modifier = Modifier) {
+    val mensaje = "¡Hola! Si ves esto es que los botones funcionan $texto."
     Button(
         onClick = {
             // Abrir WhatsApp con el número correspondiente
-            val url = "https://wa.me/$numeroWhatsApp"
+            val url = "https://wa.me/$numeroWhatsApp?text=${Uri.encode(mensaje)}"
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             context.startActivity(intent)
         },

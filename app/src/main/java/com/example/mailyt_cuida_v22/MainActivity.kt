@@ -62,6 +62,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             navHostController = rememberNavController()
             MailyTCuidaV22Theme {
+                val currentUser = auth.currentUser
+                if (currentUser != null) {
+                    // Usuario ya logueado, navega directo a HomeScreen
+                    androidx.compose.runtime.LaunchedEffect(Unit) {
+                        navHostController.navigate("home") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                }
                 NavigationWrapper(navHostController, auth, googleAuthHelper)
             }
         }

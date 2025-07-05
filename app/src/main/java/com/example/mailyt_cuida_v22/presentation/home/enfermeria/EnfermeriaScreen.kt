@@ -3,6 +3,8 @@ package com.example.mailyt_cuida_v22.presentation.home.enfermeria
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Imports necesarios
 // ─────────────────────────────────────────────────────────────────────────────
+import android.content.Context
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,12 +22,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.draw.drawWithContent
+import com.example.mailyt_cuida_v22.data.database.AppDatabase
+import com.example.mailyt_cuida_v22.data.entity.SignosVitalesEntity
+import com.example.mailyt_cuida_v22.data.repository.SignosVitalesRepository
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.collectLatest
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. Modelo que define cada rango de IMC (nombre, color, valores mínimo y máximo)
@@ -62,58 +70,74 @@ data class SignosData(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnfermeriaScreen(navController: NavController) {
+    val context = LocalContext.current
+    
     // 4.1. Estados que muestran los valores actuales
-    var peso by remember { mutableStateOf("0") }
-    var estatura by remember { mutableStateOf("0") }
-    var frecuenciaCardiaca by remember { mutableStateOf("0") }
-    var frecuenciaRespiratoria by remember { mutableStateOf("0") }
-    var presionSistolica by remember { mutableStateOf("0") }
-    var presionDiastolica by remember { mutableStateOf("0") }
-    var saturacionOxigeno by remember { mutableStateOf("0") }
-    var temperatura by remember { mutableStateOf("0") }
-    var glucosa by remember { mutableStateOf("0") }
-    var trigliceridos by remember { mutableStateOf("0") }
-    var urea by remember { mutableStateOf("0") }
-    var creatinina by remember { mutableStateOf("0") }
-    var hemoglobina by remember { mutableStateOf("0") }
-
-    // 4.2. Escuchamos el resultado de la pantalla de signos
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    LaunchedEffect(backStackEntry?.savedStateHandle) {
-        backStackEntry?.savedStateHandle?.let { handle ->
-            // Leemos cada valor individualmente
-            handle.get<String>("peso")?.let { peso = it }
-            handle.get<String>("estatura")?.let { estatura = it }
-            handle.get<String>("frecuenciaCardiaca")?.let { frecuenciaCardiaca = it }
-            handle.get<String>("frecuenciaRespiratoria")?.let { frecuenciaRespiratoria = it }
-            handle.get<String>("presionSistolica")?.let { presionSistolica = it }
-            handle.get<String>("presionDiastolica")?.let { presionDiastolica = it }
-            handle.get<String>("saturacionOxigeno")?.let { saturacionOxigeno = it }
-            handle.get<String>("temperatura")?.let { temperatura = it }
-            handle.get<String>("glucosa")?.let { glucosa = it }
-            handle.get<String>("trigliceridos")?.let { trigliceridos = it }
-            handle.get<String>("urea")?.let { urea = it }
-            handle.get<String>("creatinina")?.let { creatinina = it }
-            handle.get<String>("hemoglobina")?.let { hemoglobina = it }
-            
-            // Limpiamos los valores para que no queden pendientes
-            handle.remove<String>("peso")
-            handle.remove<String>("estatura")
-            handle.remove<String>("frecuenciaCardiaca")
-            handle.remove<String>("frecuenciaRespiratoria")
-            handle.remove<String>("presionSistolica")
-            handle.remove<String>("presionDiastolica")
-            handle.remove<String>("saturacionOxigeno")
-            handle.remove<String>("temperatura")
-            handle.remove<String>("glucosa")
-            handle.remove<String>("trigliceridos")
-            handle.remove<String>("urea")
-            handle.remove<String>("creatinina")
-            handle.remove<String>("hemoglobina")
+    var peso by remember { mutableStateOf("") }
+    var estatura by remember { mutableStateOf("") }
+    var frecuenciaCardiaca by remember { mutableStateOf("") }
+    var frecuenciaRespiratoria by remember { mutableStateOf("") }
+    var presionSistolica by remember { mutableStateOf("") }
+    var presionDiastolica by remember { mutableStateOf("") }
+    var saturacionOxigeno by remember { mutableStateOf("") }
+    var temperatura by remember { mutableStateOf("") }
+    var glucosa by remember { mutableStateOf("") }
+    var trigliceridos by remember { mutableStateOf("") }
+    var urea by remember { mutableStateOf("") }
+    var creatinina by remember { mutableStateOf("") }
+    var hemoglobina by remember { mutableStateOf("") }
+    
+    // 4.2. Inicializar base de datos y repositorio
+    val database = remember { AppDatabase.getDatabase(context) }
+    val repository = remember { SignosVitalesRepository(database.signosVitalesDao()) }
+    
+    // 4.3. Cargar datos más recientes desde Room
+    LaunchedEffect(Unit) {
+        Log.d("EnfermeriaScreen", "Iniciando carga de datos...")
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            Log.d("EnfermeriaScreen", "Usuario encontrado: ${currentUser.uid}")
+            try {
+                // Cargar el valor más reciente de cada campo individual
+                val latestPeso = repository.getLatestPeso(currentUser.uid)
+                val latestEstatura = repository.getLatestEstatura(currentUser.uid)
+                val latestFrecuenciaCardiaca = repository.getLatestFrecuenciaCardiaca(currentUser.uid)
+                val latestFrecuenciaRespiratoria = repository.getLatestFrecuenciaRespiratoria(currentUser.uid)
+                val latestPresionSistolica = repository.getLatestPresionSistolica(currentUser.uid)
+                val latestPresionDiastolica = repository.getLatestPresionDiastolica(currentUser.uid)
+                val latestSaturacionOxigeno = repository.getLatestSaturacionOxigeno(currentUser.uid)
+                val latestTemperatura = repository.getLatestTemperatura(currentUser.uid)
+                val latestGlucosa = repository.getLatestGlucosa(currentUser.uid)
+                val latestTrigliceridos = repository.getLatestTrigliceridos(currentUser.uid)
+                val latestUrea = repository.getLatestUrea(currentUser.uid)
+                val latestCreatinina = repository.getLatestCreatinina(currentUser.uid)
+                val latestHemoglobina = repository.getLatestHemoglobina(currentUser.uid)
+                
+                // Asignar valores solo si existen
+                latestPeso?.let { peso = it }
+                latestEstatura?.let { estatura = it }
+                latestFrecuenciaCardiaca?.let { frecuenciaCardiaca = it }
+                latestFrecuenciaRespiratoria?.let { frecuenciaRespiratoria = it }
+                latestPresionSistolica?.let { presionSistolica = it }
+                latestPresionDiastolica?.let { presionDiastolica = it }
+                latestSaturacionOxigeno?.let { saturacionOxigeno = it }
+                latestTemperatura?.let { temperatura = it }
+                latestGlucosa?.let { glucosa = it }
+                latestTrigliceridos?.let { trigliceridos = it }
+                latestUrea?.let { urea = it }
+                latestCreatinina?.let { creatinina = it }
+                latestHemoglobina?.let { hemoglobina = it }
+                
+                Log.d("EnfermeriaScreen", "Datos cargados individualmente - Peso: '$peso', Estatura: '$estatura', FCardiaca: '$frecuenciaCardiaca'")
+            } catch (e: Exception) {
+                Log.e("EnfermeriaScreen", "Error cargando datos: ${e.message}", e)
+            }
+        } else {
+            Log.w("EnfermeriaScreen", "No hay usuario autenticado")
         }
     }
 
-    // 4.3. Layout con fondo, TopAppBar y FAB
+    // 4.4. Layout con fondo, TopAppBar y FAB
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -147,29 +171,145 @@ fun EnfermeriaScreen(navController: NavController) {
                     .padding(12.dp)
                     .weight(1f)
             ) {
-                // 4.3.1. Box de IMC expandible
+                // 4.5.1. Box de IMC expandible
                 val imc = try {
-                    val m = estatura.toFloat() / 100f
-                    peso.toFloat() / (m * m)
-                } catch (_: Exception) { 0f }
+                    if (peso.isNotBlank() && estatura.isNotBlank()) {
+                        val pesoFloat = peso.toFloat()
+                        val estaturaFloat = estatura.toFloat()
+                        val alturaMetros = estaturaFloat / 100f
+                        val imcValue = pesoFloat / (alturaMetros * alturaMetros)
+                        Log.d("EnfermeriaScreen", "Calculando IMC - Peso: $peso, Estatura: $estatura, IMC: $imcValue")
+                        imcValue
+                    } else {
+                        Log.d("EnfermeriaScreen", "No hay datos suficientes para calcular IMC")
+                        0f
+                    }
+                } catch (_: Exception) { 
+                    Log.e("EnfermeriaScreen", "Error calculando IMC")
+                    0f 
+                }
                 IMCBoxExpandable(imc = imc)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 4.3.2. Lista de filas con cada vital
-                VitalRow(Icons.Default.MonitorWeight,      "Peso",                peso)
-                VitalRow(Icons.Default.Straighten,         "Estatura",            estatura)
-                VitalRow(Icons.Default.Favorite,           "F. Cardíaca",         frecuenciaCardiaca)
-                VitalRow(Icons.Default.Air,                "F. Respiratoria",     frecuenciaRespiratoria)
-                VitalRow(Icons.Default.Add,                "P. Sistólica",        presionSistolica)
-                VitalRow(Icons.Default.Remove,             "P. Diastólica",       presionDiastolica)
-                VitalRow(Icons.Default.AirlineSeatFlat,    "Sat O₂",              saturacionOxigeno)
-                VitalRow(Icons.Default.DeviceThermostat,   "Temperatura",         temperatura)
-                VitalRow(Icons.Default.Bloodtype,          "Glucosa",             glucosa)
-                VitalRow(Icons.Default.LocalFireDepartment,"Triglicéridos",       trigliceridos)
-                VitalRow(Icons.Default.Healing,            "Urea",                urea)
-                VitalRow(Icons.Default.MedicalServices,             "Creatinina",          creatinina)
-                VitalRow(Icons.Default.Bloodtype,          "Hemoglobina",         hemoglobina)
+                // 4.5.2. Lista de filas con cada vital (ahora clickeables)
+                VitalRow(
+                    icon = Icons.Default.MonitorWeight,
+                    label = "Peso",
+                    value = peso,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a peso_grafica")
+                        navController.navigate("peso_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Straighten,
+                    label = "Estatura",
+                    value = estatura,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a estatura_grafica")
+                        navController.navigate("estatura_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Favorite,
+                    label = "F. Cardíaca",
+                    value = frecuenciaCardiaca,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a frecuencia_cardiaca_grafica")
+                        navController.navigate("frecuencia_cardiaca_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Air,
+                    label = "F. Respiratoria",
+                    value = frecuenciaRespiratoria,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a frecuencia_respiratoria_grafica")
+                        navController.navigate("frecuencia_respiratoria_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Add,
+                    label = "P. Sistólica",
+                    value = presionSistolica,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a presion_sistolica_grafica")
+                        navController.navigate("presion_sistolica_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Remove,
+                    label = "P. Diastólica",
+                    value = presionDiastolica,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a presion_diastolica_grafica")
+                        navController.navigate("presion_diastolica_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.AirlineSeatFlat,
+                    label = "Sat O₂",
+                    value = saturacionOxigeno,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a saturacion_oxigeno_grafica")
+                        navController.navigate("saturacion_oxigeno_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.DeviceThermostat,
+                    label = "Temperatura",
+                    value = temperatura,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a temperatura_grafica")
+                        navController.navigate("temperatura_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Bloodtype,
+                    label = "Glucosa",
+                    value = glucosa,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a glucosa_grafica")
+                        navController.navigate("glucosa_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.LocalFireDepartment,
+                    label = "Triglicéridos",
+                    value = trigliceridos,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a trigliceridos_grafica")
+                        navController.navigate("trigliceridos_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Healing,
+                    label = "Urea",
+                    value = urea,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a urea_grafica")
+                        navController.navigate("urea_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.MedicalServices,
+                    label = "Creatinina",
+                    value = creatinina,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a creatinina_grafica")
+                        navController.navigate("creatinina_grafica") 
+                    }
+                )
+                VitalRow(
+                    icon = Icons.Default.Bloodtype,
+                    label = "Hemoglobina",
+                    value = hemoglobina,
+                    onClick = { 
+                        Log.d("EnfermeriaScreen", "Navegando a hemoglobina_grafica")
+                        navController.navigate("hemoglobina_grafica") 
+                    }
+                )
 
                 // ⠀⠀⠀Espacio para que no lo cubra el FAB
                 Spacer(modifier = Modifier.height(80.dp))
@@ -177,10 +317,13 @@ fun EnfermeriaScreen(navController: NavController) {
         }
 
         // ─────────────────────────────────────────────────────────
-        // 4.4. FloatingActionButton para abrir pantalla de signos
+        // 4.6. FloatingActionButton para abrir pantalla de signos
         // ─────────────────────────────────────────────────────────
         FloatingActionButton(
-            onClick = { navController.navigate("signos_vitales") },
+            onClick = { 
+                Log.d("EnfermeriaScreen", "Navegando a signos_vitales")
+                navController.navigate("signos_vitales") 
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -193,14 +336,15 @@ fun EnfermeriaScreen(navController: NavController) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. Fila que muestra icono, etiqueta y valor
+// 5. Fila que muestra icono, etiqueta y valor (ahora clickeable)
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun VitalRow(icon: ImageVector, label: String, value: String) {
+fun VitalRow(icon: ImageVector, label: String, value: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 7.dp),
+            .padding(vertical = 7.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Gray)
@@ -214,7 +358,11 @@ fun VitalRow(icon: ImageVector, label: String, value: String) {
             Icon(icon, contentDescription = label, tint = Color(0xFF0097A7))
             Spacer(modifier = Modifier.width(12.dp))
             Text(label, modifier = Modifier.weight(1f))
-            Text(value, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (value.isNotBlank()) value else "No registrado",
+                fontWeight = FontWeight.Bold,
+                color = if (value.isNotBlank()) Color.Black else Color.Gray
+            )
         }
     }
 }
@@ -234,12 +382,13 @@ fun IMCBoxExpandable(imc: Float) {
         IMCRango("Obesidad", Color.Red, 30f, 60f)
     )
     val pos = (imc / 60f).coerceIn(0f, 1f)
+    val tieneDatos = imc > 0f
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(altura)
-            .clickable { expandido = !expandido },
+            .clickable { if (tieneDatos) expandido = !expandido },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
@@ -255,50 +404,62 @@ fun IMCBoxExpandable(imc: Float) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("IMC", color = Color.White, fontWeight = FontWeight.Bold)
-                Icon(
-                    imageVector = if (expandido) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null
-                )
-            }
-
-            if (expandido) {
-                Spacer(Modifier.height(8.dp))
-                Text(imc.toString(), fontSize = 28.sp, color = Color.Red)
-                Spacer(Modifier.height(8.dp))
-            }
-
-            Box(Modifier.fillMaxWidth().height(20.dp)) {
-                Row(Modifier.fillMaxSize()) {
-                    rangos.forEach {
-                        val w = (it.max - it.min) / 60f
-                        Box(Modifier.weight(w).fillMaxHeight().background(it.color))
-                    }
+                if (tieneDatos) {
+                    Icon(
+                        imageVector = if (expandido) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null
+                    )
                 }
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(20.dp)
-                        .drawWithContent {
-                            drawContent()
-                            drawCircle(
-                                color = Color.Red,
-                                radius = 10f,
-                                center = Offset(size.width * pos, size.height / 2)
-                            )
-                        }
-                )
             }
 
-            if (expandido) {
-                Spacer(Modifier.height(8.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    rangos.forEach {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(it.nombre, fontSize = 12.sp)
-                            Text("${it.min}–${it.max}", fontSize = 12.sp)
+            if (tieneDatos) {
+                if (expandido) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(imc.toString(), fontSize = 28.sp, color = Color.Red)
+                    Spacer(Modifier.height(8.dp))
+                }
+
+                Box(Modifier.fillMaxWidth().height(20.dp)) {
+                    Row(Modifier.fillMaxSize()) {
+                        rangos.forEach {
+                            val w = (it.max - it.min) / 60f
+                            Box(Modifier.weight(w).fillMaxHeight().background(it.color))
                         }
                     }
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(20.dp)
+                            .drawWithContent {
+                                drawContent()
+                                drawCircle(
+                                    color = Color.Red,
+                                    radius = 10f,
+                                    center = Offset(size.width * pos, size.height / 2)
+                                )
+                            }
+                    )
                 }
+
+                if (expandido) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        rangos.forEach {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(it.nombre, fontSize = 12.sp)
+                                Text("${it.min}–${it.max}", fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+            } else {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Ingresa peso y estatura para calcular IMC",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             }
         }
     }

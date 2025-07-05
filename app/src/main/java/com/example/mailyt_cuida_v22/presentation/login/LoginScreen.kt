@@ -82,8 +82,7 @@ fun LoginScreen(auth: FirebaseAuth, navController: NavHostController) {
             ) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = White
+                    contentDescription = "Regresar"
                 )
             }
             Spacer(modifier = Modifier.weight(1f))

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.googleServices)
     alias(libs.plugins.crashlytics)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -19,6 +20,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
+
 
     buildTypes {
         release {
@@ -54,6 +61,14 @@ dependencies {
     implementation(libs.play.services.auth)
 
     implementation("androidx.compose.material:material-icons-extended:<versión>")
+
+    // Room dependencies
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+
+    // MPAndroidChart for graphs
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)

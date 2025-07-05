@@ -3,6 +3,9 @@ package com.example.mailyt_cuida_v22.presentation.home.enfermeria
 // ─────────────────────────────────────────────────────────────────────────────
 // Imports necesarios
 // ─────────────────────────────────────────────────────────────────────────────
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,10 +20,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.mailyt_cuida_v22.data.database.AppDatabase
+import com.example.mailyt_cuida_v22.data.entity.SignosVitalesEntity
+import com.example.mailyt_cuida_v22.data.repository.SignosVitalesRepository
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import java.util.Date
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pantalla para ingresar todos los signos vitales
@@ -28,6 +38,11 @@ import androidx.navigation.NavController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignosVitalesScreen(navController: NavController) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    Log.d("SignosVitalesScreen", "Iniciando pantalla de signos vitales")
+    
     // 1. Estados de cada campo
     var peso by remember { mutableStateOf("") }
     var estatura by remember { mutableStateOf("") }
@@ -42,6 +57,80 @@ fun SignosVitalesScreen(navController: NavController) {
     var urea by remember { mutableStateOf("") }
     var creatinina by remember { mutableStateOf("") }
     var hemoglobina by remember { mutableStateOf("") }
+    
+    // 2. Estado de carga
+    var isLoading by remember { mutableStateOf(false) }
+    
+    // 3. Inicializar base de datos y repositorio
+    val database = remember { AppDatabase.getDatabase(context) }
+    val repository = remember { SignosVitalesRepository(database.signosVitalesDao()) }
+    
+    // 4. Función para validar si hay al menos un campo lleno
+    fun hasAtLeastOneField(): Boolean {
+        val hasField = peso.isNotBlank() || estatura.isNotBlank() || frecuenciaCardiaca.isNotBlank() ||
+               frecuenciaRespiratoria.isNotBlank() || presionSistolica.isNotBlank() || 
+               presionDiastolica.isNotBlank() || saturacionOxigeno.isNotBlank() || 
+               temperatura.isNotBlank() || glucosa.isNotBlank() || trigliceridos.isNotBlank() ||
+               urea.isNotBlank() || creatinina.isNotBlank() || hemoglobina.isNotBlank()
+        Log.d("SignosVitalesScreen", "Validación de campos: $hasField")
+        return hasField
+    }
+    
+    // 5. Función para guardar datos
+    fun saveData() {
+        Log.d("SignosVitalesScreen", "Iniciando guardado de datos...")
+        Log.d("SignosVitalesScreen", "Valores actuales - Peso: '$peso', Estatura: '$estatura', FCardiaca: '$frecuenciaCardiaca'")
+        
+        if (!hasAtLeastOneField()) {
+            Log.w("SignosVitalesScreen", "No hay campos llenos para guardar")
+            Toast.makeText(context, "Debes llenar al menos un campo", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        scope.launch {
+            isLoading = true
+            try {
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                if (currentUser != null) {
+                    Log.d("SignosVitalesScreen", "Usuario autenticado: ${currentUser.uid}")
+                    
+                    val signosVitales = SignosVitalesEntity(
+                        userId = currentUser.uid,
+                        fecha = Date(),
+                        peso = peso.takeIf { it.isNotBlank() },
+                        estatura = estatura.takeIf { it.isNotBlank() },
+                        frecuenciaCardiaca = frecuenciaCardiaca.takeIf { it.isNotBlank() },
+                        frecuenciaRespiratoria = frecuenciaRespiratoria.takeIf { it.isNotBlank() },
+                        presionSistolica = presionSistolica.takeIf { it.isNotBlank() },
+                        presionDiastolica = presionDiastolica.takeIf { it.isNotBlank() },
+                        saturacionOxigeno = saturacionOxigeno.takeIf { it.isNotBlank() },
+                        temperatura = temperatura.takeIf { it.isNotBlank() },
+                        glucosa = glucosa.takeIf { it.isNotBlank() },
+                        trigliceridos = trigliceridos.takeIf { it.isNotBlank() },
+                        urea = urea.takeIf { it.isNotBlank() },
+                        creatinina = creatinina.takeIf { it.isNotBlank() },
+                        hemoglobina = hemoglobina.takeIf { it.isNotBlank() }
+                    )
+                    
+                    Log.d("SignosVitalesScreen", "Entidad creada: $signosVitales")
+                    
+                    val id = repository.insertSignosVitales(signosVitales)
+                    Log.d("SignosVitalesScreen", "Datos guardados con ID: $id")
+                    
+                    Toast.makeText(context, "Datos guardados exitosamente", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                } else {
+                    Log.e("SignosVitalesScreen", "Usuario no autenticado")
+                    Toast.makeText(context, "Error: Usuario no autenticado", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("SignosVitalesScreen", "Error al guardar datos: ${e.message}", e)
+                Toast.makeText(context, "Error al guardar: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     Box(
         Modifier
@@ -114,33 +203,14 @@ fun SignosVitalesScreen(navController: NavController) {
         // Botón Guardar (Extended FAB)
         // ─────────────────────────────────────────────────────────
         ExtendedFloatingActionButton(
-            text = { Text("Guardar") },
-            onClick = {
-                // 1) Guardamos cada valor individualmente en el SavedStateHandle
-                navController.previousBackStackEntry?.savedStateHandle?.apply {
-                    set("peso", peso)
-                    set("estatura", estatura)
-                    set("frecuenciaCardiaca", frecuenciaCardiaca)
-                    set("frecuenciaRespiratoria", frecuenciaRespiratoria)
-                    set("presionSistolica", presionSistolica)
-                    set("presionDiastolica", presionDiastolica)
-                    set("saturacionOxigeno", saturacionOxigeno)
-                    set("temperatura", temperatura)
-                    set("glucosa", glucosa)
-                    set("trigliceridos", trigliceridos)
-                    set("urea", urea)
-                    set("creatinina", creatinina)
-                    set("hemoglobina", hemoglobina)
-                }
-                // 2) Navegamos atrás
-                navController.popBackStack()
-            },
+            text = { Text(if (isLoading) "Guardando..." else "Guardar") },
+            onClick = { if (!isLoading && hasAtLeastOneField()) saveData() },
             icon = { /* opcional: poner un ícono */ },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
                 .navigationBarsPadding(),
-            containerColor = Color(0xFFE1BEE7)
+            containerColor = if (hasAtLeastOneField()) Color(0xFFE1BEE7) else Color.Gray
         )
     }
 }

@@ -81,21 +81,10 @@ fun SignupScreen(auth: FirebaseAuth, navController: NavHostController) {
         Spacer(modifier = Modifier.weight(2f))
 
         Row(){
-            IconButton(
-                onClick = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    } else {
-                        navController.navigate("initial") {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                }
-            ) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
-                    Icons.Default.ArrowBack, 
-                    contentDescription = "Back",
-                    tint = White
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Regresar"
                 )
             }
             Spacer(modifier = Modifier.weight(1f))

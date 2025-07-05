@@ -8,6 +8,8 @@ import com.example.mailyt_cuida_v22.presentation.initial.InitialScreen
 import com.example.mailyt_cuida_v22.presentation.login.LoginScreen
 import com.example.mailyt_cuida_v22.presentation.signup.SignupScreen
 import com.example.mailyt_cuida_v22.presentation.home.HomeScreen
+import com.example.mailyt_cuida_v22.presentation.home.enfermeria.EnfermeriaScreen
+import com.example.mailyt_cuida_v22.presentation.home.enfermeria.SignosVitalesScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -33,6 +35,14 @@ fun NavigationWrapper(navHostController: NavHostController, auth: FirebaseAuth, 
 
         composable("home"){
             HomeScreen(navHostController)
+        }
+
+        composable("enfermeria"){
+            EnfermeriaScreen(navHostController)
+        }
+
+        composable("signos_vitales"){
+            SignosVitalesScreen(navHostController)
         }
     }
 
